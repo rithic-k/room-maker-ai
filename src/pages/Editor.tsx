@@ -23,6 +23,8 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate, useParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import AIFloorPlanGenerator from "@/components/AIFloorPlanGenerator";
+import FloorPlanCanvas from "@/components/FloorPlanCanvas";
 
 interface Tool {
   id: string;
@@ -44,6 +46,8 @@ const Editor = () => {
   const [selectedTool, setSelectedTool] = useState("move");
   const [gridVisible, setGridVisible] = useState(true);
   const [zoom, setZoom] = useState(100);
+  const [floorPlan, setFloorPlan] = useState(null);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const navigate = useNavigate();
   const { projectId } = useParams();
 
@@ -52,13 +56,17 @@ const Editor = () => {
   };
 
   const handleAIGenerate = () => {
-    // AI generation functionality will be implemented with Supabase
-    console.log("AI Generate clicked");
+    setShowAIGenerator(!showAIGenerator);
   };
 
   const handleAIOptimize = () => {
     // AI optimization functionality will be implemented with Supabase
     console.log("AI Optimize clicked");
+  };
+
+  const handleFloorPlanGenerated = (generatedFloorPlan: any) => {
+    setFloorPlan(generatedFloorPlan);
+    setShowAIGenerator(false);
   };
 
   return (
@@ -101,85 +109,102 @@ const Editor = () => {
 
       <div className="flex flex-1">
         {/* Left Sidebar - Tools */}
-        <aside className="w-64 border-r bg-card p-4">
-          <div className="space-y-6">
+        <aside className={cn(
+          "border-r bg-card transition-all duration-300",
+          showAIGenerator ? "w-96" : "w-64"
+        )}>
+          <div className="p-4 h-full flex flex-col space-y-6">
             {/* AI Tools */}
-            <div>
-              <h3 className="font-semibold mb-3 text-foreground">AI Assistant</h3>
-              <div className="space-y-2">
-                <Button 
-                  onClick={handleAIGenerate}
-                  className="w-full justify-start bg-secondary hover:bg-secondary-hover text-secondary-foreground"
-                >
-                  <Zap className="mr-2 h-4 w-4" />
-                  Generate Layout
-                </Button>
-                <Button 
-                  onClick={handleAIOptimize}
-                  className="w-full justify-start bg-accent hover:bg-accent/90 text-accent-foreground"
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Optimize Layout
-                </Button>
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Drawing Tools */}
-            <div>
-              <h3 className="font-semibold mb-3 text-foreground">Tools</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {tools.map((tool) => {
-                  const Icon = tool.icon;
-                  return (
-                    <Button
-                      key={tool.id}
-                      variant={selectedTool === tool.id ? "default" : "ghost"}
-                      size="sm"
-                      className={cn(
-                        "h-12 flex-col space-y-1",
-                        selectedTool === tool.id && "bg-primary text-primary-foreground"
-                      )}
-                      onClick={() => setSelectedTool(tool.id)}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="text-xs">{tool.name}</span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <Separator />
-
-            {/* Layers */}
-            <div>
-              <h3 className="font-semibold mb-3 text-foreground">Layers</h3>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 bg-muted rounded">
-                  <div className="flex items-center space-x-2">
-                    <Layers className="h-4 w-4" />
-                    <span className="text-sm">Walls</span>
-                  </div>
-                  <Badge variant="secondary">3</Badge>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded">
-                  <div className="flex items-center space-x-2">
-                    <Layers className="h-4 w-4" />
-                    <span className="text-sm">Furniture</span>
-                  </div>
-                  <Badge variant="outline">0</Badge>
-                </div>
-                <div className="flex items-center justify-between p-2 rounded">
-                  <div className="flex items-center space-x-2">
-                    <Layers className="h-4 w-4" />
-                    <span className="text-sm">Labels</span>
-                  </div>
-                  <Badge variant="outline">1</Badge>
+            {showAIGenerator ? (
+              <AIFloorPlanGenerator onFloorPlanGenerated={handleFloorPlanGenerated} />
+            ) : (
+              <div>
+                <h3 className="font-semibold mb-3 text-foreground">AI Assistant</h3>
+                <div className="space-y-2">
+                  <Button 
+                    onClick={handleAIGenerate}
+                    className="w-full justify-start bg-secondary hover:bg-secondary/80 text-secondary-foreground"
+                  >
+                    <Zap className="mr-2 h-4 w-4" />
+                    Generate Layout
+                  </Button>
+                  <Button 
+                    onClick={handleAIOptimize}
+                    className="w-full justify-start bg-accent hover:bg-accent/90 text-accent-foreground"
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Optimize Layout
+                  </Button>
                 </div>
               </div>
-            </div>
+            )}
+
+            {!showAIGenerator && (
+              <>
+                <Separator />
+
+                {/* Drawing Tools */}
+                <div>
+                  <h3 className="font-semibold mb-3 text-foreground">Tools</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {tools.map((tool) => {
+                      const Icon = tool.icon;
+                      return (
+                        <Button
+                          key={tool.id}
+                          variant={selectedTool === tool.id ? "default" : "ghost"}
+                          size="sm"
+                          className={cn(
+                            "h-12 flex-col space-y-1",
+                            selectedTool === tool.id && "bg-primary text-primary-foreground"
+                          )}
+                          onClick={() => setSelectedTool(tool.id)}
+                        >
+                          <Icon className="h-4 w-4" />
+                          <span className="text-xs">{tool.name}</span>
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Layers */}
+                <div>
+                  <h3 className="font-semibold mb-3 text-foreground">Layers</h3>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-2 bg-muted rounded">
+                      <div className="flex items-center space-x-2">
+                        <Layers className="h-4 w-4" />
+                        <span className="text-sm">Walls</span>
+                      </div>
+                      <Badge variant="secondary">
+                        {floorPlan?.floorPlan?.walls?.length || 0}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded">
+                      <div className="flex items-center space-x-2">
+                        <Layers className="h-4 w-4" />
+                        <span className="text-sm">Rooms</span>
+                      </div>
+                      <Badge variant="outline">
+                        {floorPlan?.floorPlan?.rooms?.length || 0}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded">
+                      <div className="flex items-center space-x-2">
+                        <Layers className="h-4 w-4" />
+                        <span className="text-sm">Openings</span>
+                      </div>
+                      <Badge variant="outline">
+                        {(floorPlan?.floorPlan?.doors?.length || 0) + (floorPlan?.floorPlan?.windows?.length || 0)}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </aside>
 
@@ -223,32 +248,11 @@ const Editor = () => {
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 relative overflow-hidden">
-            <div 
-              className={cn(
-                "w-full h-full relative",
-                gridVisible && "grid-pattern"
-              )}
-              style={{ transform: `scale(${zoom / 100})` }}
-            >
-              {/* Canvas content area */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Card className="w-96 h-64 border-dashed border-2 border-muted-foreground/30">
-                  <CardContent className="flex items-center justify-center h-full">
-                    <div className="text-center text-muted-foreground">
-                      <Grid3X3 className="h-12 w-12 mx-auto mb-4" />
-                      <p className="text-lg font-medium mb-2">Start Drawing</p>
-                      <p className="text-sm">
-                        Use the tools on the left to create your floor plan
-                        <br />
-                        or click "Generate Layout" for AI assistance
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </div>
+          <FloorPlanCanvas 
+            floorPlan={floorPlan}
+            gridVisible={gridVisible}
+            zoom={zoom}
+          />
 
           {/* Bottom Status Bar */}
           <div className="border-t bg-card px-4 py-2">
@@ -259,6 +263,12 @@ const Editor = () => {
                 <span>Grid: {gridVisible ? "On" : "Off"}</span>
                 <span>•</span>
                 <span>Zoom: {zoom}%</span>
+                {floorPlan && (
+                  <>
+                    <span>•</span>
+                    <span>AI Generated</span>
+                  </>
+                )}
               </div>
               <div className="text-xs">
                 by Team Blueprint™
