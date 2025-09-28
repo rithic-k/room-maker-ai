@@ -69,6 +69,24 @@ const Editor = () => {
     setShowAIGenerator(false);
   };
 
+  const handleDownload = () => {
+    if (!floorPlan) {
+      alert("No floor plan to download. Please generate one first.");
+      return;
+    }
+
+    // Create a download of the floor plan data
+    const dataStr = JSON.stringify(floorPlan, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `floor-plan-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Top Toolbar */}
@@ -100,7 +118,7 @@ const Editor = () => {
             <Button variant="ghost" size="sm">
               <Share2 className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={handleDownload}>
               <Download className="h-4 w-4" />
             </Button>
           </div>

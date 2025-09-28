@@ -12,11 +12,13 @@ import { toast } from "sonner";
 interface FloorPlanData {
   floorPlan: {
     dimensions: { width: number; height: number };
+    totalSquareFootage?: number;
     rooms: Array<{
       id: string;
       name: string;
       bounds: { x: number; y: number; width: number; height: number };
       type: string;
+      squareFootage?: number;
     }>;
     walls: Array<{
       id: string;
@@ -30,12 +32,20 @@ interface FloorPlanData {
       wallId: string;
       width: number;
       swing: string;
+      type?: string;
     }>;
     windows: Array<{
       id: string;
       position: { x: number; y: number };
       wallId: string;
       width: number;
+      dimensions?: string;
+    }>;
+    hallways?: Array<{
+      id: string;
+      name: string;
+      bounds: { x: number; y: number; width: number; height: number };
+      type: string;
     }>;
   };
   description: string;

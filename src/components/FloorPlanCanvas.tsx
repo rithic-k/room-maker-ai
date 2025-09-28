@@ -6,11 +6,13 @@ import { cn } from "@/lib/utils";
 interface FloorPlanData {
   floorPlan: {
     dimensions: { width: number; height: number };
+    totalSquareFootage?: number;
     rooms: Array<{
       id: string;
       name: string;
       bounds: { x: number; y: number; width: number; height: number };
       type: string;
+      squareFootage?: number;
     }>;
     walls: Array<{
       id: string;
@@ -24,12 +26,20 @@ interface FloorPlanData {
       wallId: string;
       width: number;
       swing: string;
+      type?: string;
     }>;
     windows: Array<{
       id: string;
       position: { x: number; y: number };
       wallId: string;
       width: number;
+      dimensions?: string;
+    }>;
+    hallways?: Array<{
+      id: string;
+      name: string;
+      bounds: { x: number; y: number; width: number; height: number };
+      type: string;
     }>;
   };
   description: string;
@@ -89,6 +99,33 @@ const FloorPlanCanvas = ({ floorPlan, gridVisible, zoom }: FloorPlanCanvasProps)
   const drawFloorPlan = (ctx: CanvasRenderingContext2D, plan: FloorPlanData['floorPlan']) => {
     const scale = 20; // 1 grid unit = 20 pixels
 
+    // Draw hallways first (if they exist)
+    if (plan.hallways) {
+      plan.hallways.forEach((hallway) => {
+        const x = hallway.bounds.x * scale;
+        const y = hallway.bounds.y * scale;
+        const width = hallway.bounds.width * scale;
+        const height = hallway.bounds.height * scale;
+
+        // Hallway background (lighter color)
+        ctx.fillStyle = '#f1f5f9';
+        ctx.fillRect(x, y, width, height);
+
+        // Hallway border
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(x, y, width, height);
+        ctx.setLineDash([]);
+
+        // Hallway label
+        ctx.fillStyle = '#64748b';
+        ctx.font = '12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(hallway.name, x + width / 2, y + height / 2);
+      });
+    }
+
     // Draw rooms
     plan.rooms.forEach((room) => {
       const x = room.bounds.x * scale;
@@ -101,15 +138,32 @@ const FloorPlanCanvas = ({ floorPlan, gridVisible, zoom }: FloorPlanCanvasProps)
       ctx.fillRect(x, y, width, height);
 
       // Room border
-      ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = room.type === 'entry' ? '#dc2626' : '#64748b';
+      ctx.lineWidth = room.type === 'entry' ? 3 : 2;
       ctx.strokeRect(x, y, width, height);
 
-      // Room label
+      // Room label with dimensions
       ctx.fillStyle = '#1e293b';
       ctx.font = '14px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText(room.name, x + width / 2, y + height / 2);
+      const lines = room.name.split(' ');
+      const roomNamePart = lines.slice(0, -1).join(' ');
+      const dimensionPart = lines[lines.length - 1];
+      
+      // Draw room name
+      ctx.fillText(roomNamePart, x + width / 2, y + height / 2 - 8);
+      
+      // Draw dimensions in smaller font
+      ctx.font = '12px sans-serif';
+      ctx.fillStyle = '#475569';
+      ctx.fillText(dimensionPart, x + width / 2, y + height / 2 + 8);
+      
+      // Show square footage if available
+      if (room.squareFootage) {
+        ctx.font = '10px sans-serif';
+        ctx.fillStyle = '#64748b';
+        ctx.fillText(`${room.squareFootage} sq ft`, x + width / 2, y + height / 2 + 20);
+      }
     });
 
     // Draw walls
@@ -164,6 +218,8 @@ const FloorPlanCanvas = ({ floorPlan, gridVisible, zoom }: FloorPlanCanvasProps)
       bathroom: '#e0f2fe',
       office: '#f3e8ff',
       dining: '#fde68a',
+      entry: '#fef2f2',
+      circulation: '#f1f5f9',
       default: '#f8fafc'
     };
     return colors[type] || colors.default;
@@ -219,6 +275,11 @@ const FloorPlanCanvas = ({ floorPlan, gridVisible, zoom }: FloorPlanCanvasProps)
           <Badge variant="secondary" className="bg-background/90">
             {floorPlan.floorPlan.rooms.length} rooms
           </Badge>
+          {floorPlan.floorPlan.totalSquareFootage && (
+            <Badge variant="outline" className="bg-background/90">
+              {floorPlan.floorPlan.totalSquareFootage} sq ft total
+            </Badge>
+          )}
           {floorPlan.description && (
             <Badge variant="outline" className="bg-background/90 max-w-[200px] text-xs">
               {floorPlan.description.length > 50 

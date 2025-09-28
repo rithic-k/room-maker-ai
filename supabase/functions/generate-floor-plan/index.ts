@@ -31,26 +31,34 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `You are an AI floor plan generator. Generate a 2D floor plan based on user descriptions.
+    const systemPrompt = `You are an AI floor plan generator. Generate a detailed 2D floor plan with specific entry spaces and dimensions.
 
-Rules:
-1. Return a JSON object with room layouts, walls, doors, and windows
-2. Use a coordinate system where (0,0) is top-left
-3. All dimensions should be in grid units (1 unit = 10 feet)
-4. Include room labels, wall thickness, and openings
-5. Ensure proper room flow and accessibility
-6. Optimize for space efficiency and natural lighting
+CRITICAL REQUIREMENTS:
+1. ALWAYS include an entry space (foyer, entryway, entrance hall, mudroom, or vestibule)
+2. Show specific dimensions for each room in the name (e.g., "Living Room (16' x 12')")
+3. Include connecting hallways and circulation paths
+4. Consider traffic flow from entry to all spaces
+5. Use realistic room proportions and sizes
 
-Response format:
+Response format (JSON only, no markdown):
 {
   "floorPlan": {
     "dimensions": { "width": number, "height": number },
+    "totalSquareFootage": number,
     "rooms": [
       {
-        "id": "room1",
-        "name": "Living Room",
+        "id": "entry1",
+        "name": "Foyer (8' x 6')",
         "bounds": { "x": number, "y": number, "width": number, "height": number },
-        "type": "living"
+        "type": "entry",
+        "squareFootage": number
+      },
+      {
+        "id": "living1", 
+        "name": "Living Room (16' x 14')",
+        "bounds": { "x": number, "y": number, "width": number, "height": number },
+        "type": "living",
+        "squareFootage": number
       }
     ],
     "walls": [
@@ -67,19 +75,29 @@ Response format:
         "position": { "x": number, "y": number },
         "wallId": "wall1",
         "width": 0.8,
-        "swing": "inward"
+        "swing": "inward",
+        "type": "entry" | "interior"
       }
     ],
     "windows": [
       {
         "id": "window1",
         "position": { "x": number, "y": number },
-        "wallId": "wall1",
-        "width": 1.2
+        "wallId": "wall1", 
+        "width": 1.2,
+        "dimensions": "4' x 3'"
+      }
+    ],
+    "hallways": [
+      {
+        "id": "hall1",
+        "name": "Main Hallway (4' wide)",
+        "bounds": { "x": number, "y": number, "width": number, "height": number },
+        "type": "circulation"
       }
     ]
   },
-  "description": "Generated floor plan description"
+  "description": "Detailed floor plan description with entry sequence"
 }`;
 
     const userPrompt = `Generate a 2D floor plan for:
