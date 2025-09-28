@@ -92,7 +92,7 @@ Create a practical and efficient layout that meets these specifications.`;
 
     console.log('Generating floor plan with Gemini...');
     
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -112,11 +112,22 @@ Create a practical and efficient layout that meets these specifications.`;
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('Gemini API error:', errorData);
-      throw new Error(`Gemini API error: ${response.status}`);
+      console.error('Gemini API error details:', {
+        status: response.status,
+        statusText: response.statusText,
+        errorData: errorData
+      });
+      throw new Error(`Gemini API error: ${response.status} - ${errorData}`);
     }
 
     const data = await response.json();
+    console.log('Gemini API response:', JSON.stringify(data, null, 2));
+    
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+      console.error('Unexpected Gemini response structure:', data);
+      throw new Error('Invalid response from Gemini API');
+    }
+    
     const generatedContent = data.candidates[0].content.parts[0].text;
     
     console.log('Generated content:', generatedContent);
